@@ -1,0 +1,169 @@
+containers:
+Are completely isolated env. it has there own processes or services, nw interfaces, mounts just like vm's but they all are sharing same oprating system kernel.
+
+We can not run windos container on ubuntu machine.
+
+Docker:
+Docker is an open platform for developing, shipping, and running applications. Docker enables you to separate your applications from your infrastructure so you can deliver software quickly.
+
+
+Docker Job:
+containerize application and sheep them and run them.
+
+Docker image:
+Docker image is a package or a template (Vm template), it is used to create one or more container.
+An image is a read-only template with instructions for creating a Docker container.
+
+Containers: 
+Containers are running instances of image each container is isolated with there own environment 
+
+Orchestration: Orchestration is the automated configuration, management, and coordination of computer systems, applications, and services.
+
+Kubernets: Kubernets is a container orchestration tech or engine which will use to orchi and manage deployments of 1000s of containers in a clusterd env.
+k8s is an open-source system for automating deployment, scaling, and management of containerized applications.
+
+Cluster : is a set of nodes. nodes is an hardware.
+
+Master is a node on which k8s is installed and is configured as a master. is moniters worker nodes. and it orchistrest worker nodes.
+
+Components of k8s(Architeture of k8s)
+1. API server: acts as a frontend for k8s. users, management devices, CLI's all talk to the API server to intract with the k8s.
+2. ETCD key store: Distributed relaible key-value store used by k8s to store all data used to manage the cluster. there can be multiple masters and multiple workers on same cluster.
+	ETCD ensures there is no coflicts between masters.
+3. Sheduler: is responsible for distributing work or containers across multiple nodes. it looks for newly created container and assigens them to nodes.
+4. Controllers: Is a brain behaind orchistration. they are reponsible for noticing and responding when nodes containers or endpoints gose down.
+	controller make decision to bring up new container in such a case.
+5. Container runtime: is a underlying software that is used to run containers (docker, rockt).
+6. kubelet: Agent that is running on each node. it is making sure that containers are runnning on node as expected.
+
+Master               -----> worker 
+Kube-apiserver              Container runtime 
+ETCD	                    Kubelet agent which will provide helth info of worker to master
+Controller
+Scheduler
+
+kubectl create deployment hello-minikube --image=docker.io/nginx:1.23
+kubectl get deployments
+kubectl expose deployment hello-minikube --type=NodePort --port=80
+kubectl get services hello-minikube
+minikube service hello-minikube --url
+kubectl run nginx --image=nginx
+
+
+PODS:
+--k8s dose not deploy containers directly on worker nodes. The containers are encapsulated into k8s objcet known as pods.  Pod is a single instance of application. Pos is smallest object that you can create.
+--We can create a pod with multiple containers. Helper cotainer or init container.
+--Containes in same pod can directly communicate with each other and they can share the same storage space
+
+
+YAML
+
+apiVersion: v1
+	POD v1
+	Service v1
+	ReplicaSet apps/v1
+	Deployment apps/v1
+
+kind: Pod
+
+
+metadata: //dic
+	name: myapp-pod
+	labels:
+	  app: myapp
+
+spec:
+this is for specifications its depending on kind 
+	container: //list
+		- name: nginx-container
+		  image nginx
+
+## ReplacationController
+apiVersion: v1
+spec:
+ -template:
+	metadata:
+		name: 
+		labels:
+			app:
+			type:
+	spec:
+		containers:
+		- name: nginx-controller
+		  image: nginx
+
+replicas: 3
+
+
+## ReplicaSet: is the process that moniters the pods. we required labeling for ReplicaSet to chose which pod is to moniter.
+template contains defination of pod. ReplicaSet required template so that if any pod failed it will create a new pod using template.
+
+kubectl replace -f a.yml
+replace command will update the replicaset with new replication count.
+kubectl scale replicaset --replicas=6 -f a.yml
+kubectl scale ReplicaSet xyz --replicas=6.
+
+If we create an extra pod with same label then replacaset will delete it 
+
+
+apiVersion apps/v1
+spec:
+ -template:
+	metadata:
+		name: 
+		labels:
+			tier: frontend
+			type:
+	spec:
+		containers:
+		- name: nginx-controller
+		  image: nginx
+
+ replicas: 3
+
+ selector:
+	matchLabels:
+	tier: frontend
+
+kubectl edit command will open configaruti
+
+
+## Deployments: is k8s object that comes higher in the hierarchy, the deployment provides us the capability upgrade the underlying instance 
+seamlesssly using rolling updates. undo changes and push and resume as required.
+
+apiVersion: apps/v1 
+kind: Deployment
+
+deployment stratargy 
+StrategyType:
+recreate & rolling update.
+
+Rolling update will down old replicaset and create new one. if we rollback it will down new replacaset and bring up old one 
+
+Commands 
+kubectl create -f 
+kubectl get deployments
+kubectl apply -f // update 
+kubectl set image deployment/webapp niginx=nginx:1.9.1
+kubectl rollout status deployment/webapp
+kubectl rollout history deployment/webapp
+kubectl rollout undo deployment/webapp
+
+## Basic Networking in k8s 
+10.244.0.0
+
+## Services in Kubernets
+Services enables a communication within and outside the application.
+NodePort: Service listen the request on port number on node  and forword it to pod port.
+ClusterIP: Service creates a virtual ip inside the cluster to enable communication between diffrent services such as backend service+ frountend service.
+Loadbalancer: 
+
+spec:
+	type: NodePort
+	pods:
+	 - targetport:80
+	   port:80
+	   nodeport: 30009
+	selector:
+		app: myapp
+		type: frontend
